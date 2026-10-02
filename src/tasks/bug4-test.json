@@ -1,0 +1,34 @@
+{
+  "name": "Bug 4 test",
+  "location": "Spite",
+  "repeatUntilOutOfActions": false,
+  "maxIterations": 1,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "target": "Mrs Chapman's Boarding House",
+      "branches": [
+        {
+          "priority": 1,
+          "branch": "Sample a nourishing soup",
+          "condition": {
+            "quality": "Wounds",
+            "operator": "above",
+            "value": 10
+          },
+          "nestedStorylet": {
+            "branch": "A Watchmaker's Hill mulligatawny"
+          }
+        },
+        {
+          "priority": 2,
+          "branch": "Retire to the parlour",
+          "nestedStorylet": {
+            "branch": "Take brandy in the parlour"
+          }
+        }
+      ]
+    }
+  ]
+}

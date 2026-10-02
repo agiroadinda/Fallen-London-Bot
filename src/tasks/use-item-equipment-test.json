@@ -1,0 +1,19 @@
+{
+  "name": "Use Item Equipment Test",
+  "location": "The University",
+  "repeatUntilOutOfActions": false,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "type": "use_item",
+      "item": "Foxfire Candle Stub",
+      "branch": "Stay up all night talking science with F.F. Gebrandt",
+      "equipment": {
+        "mode": "maximise",
+        "stats": "Watchful"
+      }
+    }
+  ],
+  "maxIterations": 1
+}

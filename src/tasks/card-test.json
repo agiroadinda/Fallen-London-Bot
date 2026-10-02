@@ -1,0 +1,15 @@
+{
+  "name": "Card Test",
+  "location": "Your Activities",
+  "repeatUntilOutOfActions": false,
+  "maxIterations": 1,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "type": "draw_cards",
+      "mode": "finite",
+      "count": 3
+    }
+  ]
+}

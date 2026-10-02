@@ -1,0 +1,66 @@
+{
+  "cards": [
+    {
+      "name": "Preparing for a brief Experiment",
+      "action": "play",
+      "branch": "Prepare carefully",
+      "priority": 1
+    },
+    {
+      "name": "Nightmares of Your Experiment",
+      "action": "play",
+      "branch": "Take a rest",
+      "priority": 4
+    },
+    {
+      "name": "Rely on F.F. Gebrandt",
+      "action": "play",
+      "branch": "Get her opinion on your research",
+      "priority": 3
+    },
+    {
+      "name": "Work with your Equipment",
+      "action": "play",
+      "branch": "Look closely at your current project",
+      "priority": 2
+    },
+    {
+      "name": "Read the Books that Others Cannot",
+      "action": "play",
+      "branch": "Pursue truths through the Red Science",
+      "condition": {
+        "quality": "Wounds",
+        "operator": "below",
+        "value": 7
+      },
+      "priority": 1
+    },
+    {
+      "name": "Filing a report for the Dean",
+      "action": "play",
+      "branch": "Fill in some forms",
+      "priority": 5
+    },
+    {
+      "name": "Work with your Shifty Student",
+      "action": "play",
+      "branches": [
+        {
+          "priority": 1,
+          "branch": "Collaborate with your shifty student"
+        },
+        {
+          "priority": 2,
+          "branch": "Shepherd your student through some research"
+        }
+      ],
+      "priority": 1
+    },
+    {
+      "name": "See a Doctor",
+      "action": "play",
+      "branch": "Take a break",
+      "priority": 2
+    }
+  ]
+}

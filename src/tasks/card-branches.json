@@ -1,0 +1,15 @@
+{
+  "name": "Card-branches",
+  "location": "Your Activities",
+  "repeatUntilOutOfActions": false,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "type": "draw_cards",
+      "mode": "infinite",
+      "autoPlayPriority": 1
+    }
+  ],
+  "maxIterations": 1
+}

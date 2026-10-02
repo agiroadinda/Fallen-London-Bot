@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fallen London Bot — Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #1a1208;
+    --parchment:  #f0e6c8;
+    --aged:       #d4b896;
+    --sepia:      #8b6914;
+    --gold:       #c9922a;
+    --gold-light: #e8b84b;
+    --crimson:    #7a1e1e;
+    --teal:       #1a4a4a;
+    --teal-light: #2a6a6a;
+    --shadow:     rgba(0,0,0,0.6);
+    --paper:      #e8d9b5;
+    --border:     #8b6914;
+    --green:      #2a5a2a;
+    --green-light:#4a9a4a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ink);
+    background-image:
+      radial-gradient(ellipse at 20% 20%, #2a1a08 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, #0a1a1a 0%, transparent 50%);
+    min-height: 100vh;
+    font-family: 'EB Garamond', serif;
+    color: var(--parchment);
+    padding: 1.5rem;
+  }
+
+  .masthead {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .masthead::before, .masthead::after {
+    content: '——— ✦ ———';
+    display: block;
+    color: var(--gold);
+    font-size: 0.9rem;
+    letter-spacing: 0.3em;
+    margin: 0.4rem 0;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-shadow: 0 0 30px rgba(201,146,42,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  .subtitle {
+    color: var(--aged);
+    font-style: italic;
+    font-size: 1rem;
+    margin-top: 0.2rem;
+  }
+
+  /* Main layout — left sidebar + right content */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1.2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+
+  /* Script list sidebar */
+  .sidebar {
+    grid-row: 1 / 3;
+    background: linear-gradient(160deg, #2a1e0e 0%, #1a1208 100%);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(201,146,42,0.3);
+  }
+
+  .task-list {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 0.8rem;
+    min-height: 100px;
+  }
+
+  .task-item {
+    padding: 0.6rem 0.7rem;
+    border: 1px solid rgba(139,105,20,0.3);
+    border-radius: 2px;
+    margin-bottom: 0.4rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.9rem;
+  }
+
+  .task-item:hover { background: rgba(201,146,42,0.1); border-color: var(--gold); }
+  .task-item.active { background: rgba(201,146,42,0.15); border-color: var(--gold-light); color: var(--gold-light); }
+
+  .task-item-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    color: var(--gold-light);
+    margin-bottom: 0.2rem;
+  }
+
+  .task-item-file {
+    font-size: 0.78rem;
+    color: var(--sepia);
+  }
+
+  /* Bot control bar */
+  .control-bar {
+    background: linear-gradient(160deg, #2a1e0e 0%, #1a1208 100%);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .bot-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--sepia);
+    transition: background 0.3s;
+  }
+
+  .status-dot.running {
+    background: var(--green-light);
+    box-shadow: 0 0 8px var(--green-light);
+    animation: pulse 1.5s infinite;
+  }
+
+  .status-dot.stopped { background: var(--crimson); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--aged);
+  }
+
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border: 1px solid;
+    border-radius: 2px;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-start { color: #7fcf7f; border-color: var(--green); }
+  .btn-start:not(:disabled):hover { background: rgba(42,90,42,0.3); box-shadow: 0 0 10px rgba(74,154,74,0.3); }
+
+  .btn-stop { color: #e08080; border-color: var(--crimson); }
+  .btn-stop:not(:disabled):hover { background: rgba(122,30,30,0.3); }
+
+  .btn-gold { color: var(--gold-light); border-color: var(--gold); }
+  .btn-gold:not(:disabled):hover { background: rgba(201,146,42,0.15); box-shadow: 0 0 10px rgba(201,146,42,0.3); }
+
+  .btn-teal { color: #7fcfcf; border-color: var(--teal-light); }
+  .btn-teal:not(:disabled):hover { background: rgba(42,106,106,0.2); }
+
+  .btn-crimson { color: #e08080; border-color: var(--crimson); font-size: 0.68rem; padding: 0.3rem 0.6rem; }
+  .btn-crimson:not(:disabled):hover { background: rgba(122,30,30,0.2); }
+
+  .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.68rem; }
+  .btn-full { width: 100%; padding: 0.6rem; font-size: 0.8rem; margin-top: 0.8rem; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba(139,105,20,0.4);
+    margin-bottom: 1.2rem;
+  }
+
+  .tab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sepia);
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .tab:hover { color: var(--aged); }
+  .tab.active { color: var(--gold-light); border-bottom-color: var(--gold); }
+
+  /* Main content panels */
+  .main-content {
+    background: linear-gradient(160deg, #2a1e0e 0%, #1a1208 100%);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.2rem;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Form elements */
+  label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--aged);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+    margin-top: 0.8rem;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(139,105,20,0.5);
+    border-radius: 2px;
+    color: var(--parchment);
+    font-family: 'EB Garamond', serif;
+    font-size: 1rem;
+    padding: 0.45rem 0.7rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(201,146,42,0.2);
+  }
+
+  select option { background: #1a1208; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.7rem;
+  }
+
+  .toggle-row label { margin: 0; }
+
+  input[type="checkbox"] {
+    width: 14px; height: 14px;
+    accent-color: var(--gold);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .three-col { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.5rem; align-items: end; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(139,105,20,0.25);
+    margin: 0.8rem 0;
+  }
+
+  .hint {
+    font-size: 0.8rem;
+    color: var(--sepia);
+    font-style: italic;
+    margin-top: 0.2rem;
+  }
+
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    color: var(--sepia);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin: 0.8rem 0 0.4rem;
+  }
+
+  /* Branch rows */
+  .branch-row {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(139,105,20,0.3);
+    border-radius: 2px;
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .branch-row-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .badge {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    border-radius: 2px;
+    padding: 0.1rem 0.4rem;
+    white-space: nowrap;
+  }
+
+  .badge-gold { color: var(--gold); border: 1px solid var(--gold); }
+  .badge-exit { color: #e08080; border: 1px solid var(--crimson); background: rgba(122,30,30,0.2); }
+  .badge-teal { color: #7fcfcf; border: 1px solid var(--teal-light); background: rgba(26,74,74,0.2); }
+
+  .condition-block {
+    background: rgba(26,74,74,0.15);
+    border: 1px solid rgba(42,106,106,0.35);
+    border-radius: 2px;
+    padding: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
+  /* Storylet list in sidebar */
+  .storylet-list-preview { margin-top: 0.5rem; }
+
+  .storylet-preview-item {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(139,105,20,0.3);
+    border-radius: 2px;
+    padding: 0.5rem 0.7rem;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  .storylet-preview-title {
+    font-size: 0.85rem;
+    color: var(--parchment);
+    flex: 1;
+    line-height: 1.3;
+  }
+
+  /* Log window */
+  .log-window {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(139,105,20,0.4);
+    border-radius: 2px;
+    padding: 0.8rem;
+    height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    scroll-behavior: smooth;
+  }
+
+  .log-line { margin-bottom: 0.1rem; }
+  .log-success { color: #7fcf7f; }
+  .log-error   { color: #e08080; }
+  .log-warn    { color: #e8b84b; }
+  .log-action  { color: #bf7fcf; }
+  .log-state   { color: #7fcfcf; }
+  .log-info    { color: #c8c0a8; }
+  .log-system  { color: var(--sepia); font-style: italic; }
+
+  .log-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    align-items: center;
+  }
+
+  .auto-scroll-label { font-size: 0.8rem; color: var(--sepia); }
+
+  /* JSON output */
+  #json-output {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(139,105,20,0.4);
+    color: #a8d8a8;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    padding: 0.8rem;
+    min-height: 180px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .row-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap; }
+
+  .empty-hint { text-align: center; padding: 1.5rem; color: var(--sepia); font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <h1>Fallen London Bot</h1>
+  <div class="subtitle">Control Panel — Build tasks, run the bot, watch the logs</div>
+</div>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR — Script list + controls -->
+  <div class="sidebar">
+    <div class="sidebar-title">📜 Saved Tasks</div>
+
+    <div class="task-list" id="task-list">
+      <div class="empty-hint">No tasks saved yet</div>
+    </div>
+
+    <button class="btn btn-gold btn-full" onclick="refreshTaskList()">↻ Refresh List</button>
+
+    <hr class="divider" style="margin:0.8rem 0">
+
+    <div class="sidebar-title">🤖 Bot Control</div>
+
+    <div style="margin-bottom:0.5rem">
+      <label>Selected Task</label>
+      <select id="selected-task-file">
+        <option value="">— select a task —</option>
+      </select>
+    </div>
+
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+      <button class="btn btn-start" id="btn-start" onclick="startBot()" style="flex:1" disabled>▶ Start</button>
+      <button class="btn btn-stop"  id="btn-stop"  onclick="stopBot()"  style="flex:1" disabled>■ Stop</button>
+    </div>
+
+    <hr class="divider" style="margin:0.8rem 0">
+
+    <div class="bot-status">
+      <div class="status-dot stopped" id="status-dot"></div>
+      <span class="status-text" id="status-text">Bot stopped</span>
+    </div>
+  </div>
+
+  <!-- CONTROL BAR -->
+  <div class="control-bar">
+    <div style="font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold-light)">
+      Fallen London Bot <span style="color:var(--sepia);font-size:0.72rem">v1.0</span>
+    </div>
+    <div style="flex:1"></div>
+    <div style="font-size:0.82rem;color:var(--aged)">
+      Build a task → Save it → Select it → Start
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('builder')">⚙ Task Builder</button>
+      <button class="tab" onclick="switchTab('logs')">📋 Bot Logs</button>
+      <button class="tab" onclick="switchTab('json')">{ } JSON Preview</button>
+      <button class="tab" onclick="switchTab('cards')">🃏 Card Database</button>
+      <button class="tab" onclick="switchTab('blacklist')">🚫 Blacklist</button>
+    </div>
+
+    <!-- TAB: Builder -->
+    <div class="tab-panel active" id="tab-builder">
+
+      <div class="two-col">
+        <div>
+          <label>Task Name</label>
+          <input type="text" id="task-name" placeholder="e.g. Spider Symposium grind" value="My Task">
+        </div>
+        <div>
+          <label>Location</label>
+          <input type="text" id="task-location" placeholder="e.g. The Singing Mandrake">
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:0.5rem">
+        <div>
+          <div class="toggle-row" style="margin-top:0.8rem">
+            <input type="checkbox" id="repeat-forever" checked>
+            <label for="repeat-forever">Run until action points exhausted</label>
+          </div>
+          <div id="max-iter-row" style="display:none;margin-top:0.5rem">
+            <label>Max Iterations</label>
+            <input type="number" id="max-iterations" value="5" min="1">
+          </div>
+        </div>
+        <div>
+          <label>Retry Delay (seconds)</label>
+          <input type="number" id="retry-delay" value="10" min="1">
+        </div>
+        <div>
+          <label>Minimum Actions to Resume</label>
+          <input type="number" id="min-actions" value="1" min="1" max="40">
+          <div class="hint">Bot waits until it has at least this many actions before starting a new run (1–40)</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Add step section -->
+      <div class="section-label">Add a Step</div>
+
+      <label>Step Type</label>
+      <select id="step-type" onchange="toggleStepType()">
+        <option value="storylet">Standard Storylet</option>
+        <option value="draw_cards">Draw Opportunity Cards</option>
+        <option value="use_item">Use Inventory Item</option>
+      </select>
+
+      <div id="step-draw-cards" style="display:none;margin-top:0.5rem">
+        <div class="condition-block">
+          <label>Draw Mode</label>
+          <select id="draw-mode">
+            <option value="finite">Finite — draw a set number of cards</option>
+            <option value="infinite">Infinite — draw until deck is empty</option>
+          </select>
+          <div id="draw-count-row" style="margin-top:0.5rem">
+            <label>Number of Cards to Draw</label>
+            <input type="number" id="draw-count" value="3" min="1" max="6">
+          </div>
+
+          <div style="margin-top:0.5rem">
+            <label>Auto-Play Priority Threshold (optional)</label>
+            <input type="number" id="draw-auto-priority" value="" min="1" placeholder="e.g. 1 = only auto-play priority 1 cards">
+            <div class="hint">Cards with a higher priority number will be held until the hand is full, then the best available card is played as a fallback.</div>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="addDrawCardsStep()">✦ Add Card Draw Step</button>
+        </div>
+      </div>
+
+      <div id="step-use-item" style="display:none;margin-top:0.5rem">
+        <div class="condition-block">
+          <label>Item Name</label>
+          <input type="text" id="use-item-name" placeholder="e.g. Foxfire Candle Stub">
+          <div class="hint">Exact name as it appears in your Possessions inventory</div>
+          <label>Branch to Click</label>
+          <input type="text" id="use-item-branch" placeholder="e.g. Stay up all night talking science">
+
+          <label>Equipment (optional)</label>
+          <select id="use-item-equip-mode" onchange="toggleUseItemEquipMode()">
+            <option value="none">Do nothing</option>
+            <option value="maximise">Equip (Maximise Stat)</option>
+            <option value="outfit">Equip (Specific Outfit)</option>
+          </select>
+          <div id="use-item-equip-maximise" style="display:none;margin-top:0.4rem">
+            <label>Stats to Maximise</label>
+            <input type="text" id="use-item-equip-stats" placeholder="e.g. Watchful">
+          </div>
+          <div id="use-item-equip-outfit" style="display:none;margin-top:0.4rem">
+            <label>Outfit Name</label>
+            <input type="text" id="use-item-equip-outfit-name" placeholder="e.g. Morning">
+          </div>
+
+
+          <button class="btn btn-gold btn-full" onclick="addUseItemStep()">✦ Add Use Item Step</button>
+        </div>
+      </div>
+
+      <div id="step-storylet">
+
+      <label>Storylet Title</label>
+      <input type="text" id="new-storylet-target" placeholder="e.g. Propose a Pertinent Point">
+      <div class="hint">Partial match is fine — e.g. "Mrs Chapman" matches the full title</div>
+
+      <label>Branch Mode</label>
+      <select id="branch-mode">
+        <option value="simple">Simple — one branch</option>
+        <option value="priority">Priority — try A first, then B, etc.</option>
+      </select>
+
+      <!-- Simple branch -->
+      <div id="simple-branch-section" style="margin-top:0.5rem">
+        <label>Branch to Click</label>
+        <input type="text" id="simple-branch" placeholder="e.g. Jack's claimed dibs!">
+        <div class="toggle-row">
+          <input type="checkbox" id="simple-has-condition" onchange="toggleSimpleCondition()">
+          <label for="simple-has-condition">Only click this branch if a quality condition is met</label>
+        </div>
+        <div id="simple-condition-block" class="condition-block" style="display:none;margin-top:0.4rem">
+          <div class="three-col">
+            <div><label>Quality Name</label><input type="text" id="sc-quality" placeholder="e.g. Wounds"></div>
+            <div><label>Operator</label>
+              <select id="sc-operator">
+                <option value="above">above</option>
+                <option value="below">below</option>
+                <option value="at_least">at least</option>
+                <option value="at_most">at most</option>
+                <option value="equals">equals</option>
+              </select>
+            </div>
+            <div><label>Value</label><input type="number" id="sc-value" value="0"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority branches -->
+      <div id="priority-branch-section" style="display:none;margin-top:0.5rem">
+        <div class="section-label">Priority Branches</div>
+        <div id="priority-branches-list"></div>
+        <button class="btn btn-teal btn-sm" onclick="addPriorityBranch()" style="margin-top:0.3rem">+ Add Branch</button>
+
+        <hr class="divider">
+
+        <div class="section-label">Exit Branches <span class="badge badge-exit" style="margin-left:0.4rem">clicked when all priority branches are locked</span></div>
+        <div id="exit-branches-list"></div>
+        <button class="btn btn-teal btn-sm" onclick="addExitBranch()" style="margin-top:0.3rem">+ Add Exit Branch</button>
+      </div>
+
+      <hr class="divider">
+
+      <div class="toggle-row">
+        <input type="checkbox" id="has-nested" onchange="toggleNested()">
+        <label for="has-nested">This storylet has a nested 0-cost action (redirect)</label>
+      </div>
+
+      <div id="nested-block" style="display:none;margin-top:0.5rem">
+        <div class="condition-block">
+          <label>Branch to Click Inside the Redirect</label>
+          <input type="text" id="nested-branch" placeholder="e.g. A Watchmaker's Hill mulligatawny">
+          <div class="hint">For priority mode, set nested branches per branch above. Use this only for simple mode.</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Equipment (optional)</div>
+      <select id="equip-mode" onchange="toggleEquipMode()">
+        <option value="none">Do nothing — keep current equipment</option>
+        <option value="maximise">Equip (Maximise Stat)</option>
+        <option value="outfit">Equip (Specific Outfit)</option>
+      </select>
+      <div id="equip-maximise-block" style="display:none;margin-top:0.5rem">
+        <label>Stats to Maximise</label>
+        <input type="text" id="equip-stats" placeholder="e.g. Watchful or Watchful, Shadowy">
+        <div class="hint">Separate multiple stats with a comma. The bot will equip items that give the highest combined bonus.</div>
+      </div>
+      <div id="equip-outfit-block" style="display:none;margin-top:0.5rem">
+        <label>Outfit Name</label>
+        <input type="text" id="equip-outfit" placeholder="e.g. Morning">
+        <div class="hint">Must match your outfit name exactly as it appears in game.</div>
+      </div>
+
+      <button class="btn btn-gold btn-full" onclick="addStorylet()">✦ Add Storylet to Task</button>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Current storylets preview -->
+      <div class="section-label">Current Task Storylets</div>
+      <div id="storylet-list-preview" class="storylet-list-preview">
+        <div class="empty-hint">No storylets added yet</div>
+      </div>
+
+      <div class="row-buttons" style="margin-top:0.8rem">
+        <button class="btn btn-gold" onclick="saveTask()">💾 Save Task</button>
+        <button class="btn btn-teal" onclick="switchTab('json')">{ } Preview JSON</button>
+        <button class="btn btn-crimson" onclick="clearAll()">✕ Clear All</button>
+      </div>
+
+    </div>
+
+    <!-- TAB: Logs -->
+    <div class="tab-panel" id="tab-logs">
+      <div class="log-window" id="log-window">
+        <div class="log-line log-system">Waiting for bot to start...</div>
+      </div>
+      <div class="log-controls">
+        <button class="btn btn-teal btn-sm" onclick="clearLogs()">Clear Logs</button>
+        <div class="toggle-row" style="margin-top:0">
+          <input type="checkbox" id="auto-scroll" checked>
+          <label for="auto-scroll" class="auto-scroll-label">Auto-scroll</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Blacklist -->
+    <div class="tab-panel" id="tab-blacklist">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+        <div class="section-label" style="margin:0">Equipment Blacklist</div>
+        <button class="btn btn-teal btn-sm" onclick="refreshBlacklist()">↻ Refresh</button>
+      </div>
+      <div class="hint" style="margin-bottom:0.8rem">Items on this list will never be equipped by the bot, even if they would maximise the target stat.</div>
+
+      <div class="condition-block" style="margin-bottom:1rem">
+        <label>Item Name</label>
+        <input type="text" id="blacklist-item" placeholder="e.g. Prisoner's Mask">
+        <div class="hint">Partial match is fine — e.g. "Mask" will blacklist any item with "Mask" in the name.</div>
+        <button class="btn btn-gold btn-full" onclick="addBlacklistItem()" style="margin-top:0.5rem">✦ Add to Blacklist</button>
+      </div>
+
+      <div id="blacklist-list">
+        <div class="empty-hint">No items blacklisted yet.</div>
+      </div>
+    </div>
+
+    <!-- TAB: Cards -->
+    <div class="tab-panel" id="tab-cards">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
+        <div class="section-label" style="margin:0">Card Behaviour Database</div>
+        <button class="btn btn-teal btn-sm" onclick="refreshCardDb()">↻ Refresh</button>
+      </div>
+      <div class="hint" style="margin-bottom:0.8rem">Cards not in the database are held automatically. Add cards here to play, discard, or hold them.</div>
+
+      <div class="condition-block" style="margin-bottom:1rem">
+        <div class="section-label" style="margin-top:0">Add / Edit Card</div>
+        <label>Card Name</label>
+        <input type="text" id="card-name" placeholder="e.g. Brimstone or frankincense?">
+        <div class="two-col" style="margin-top:0.5rem">
+          <div>
+            <label>Action</label>
+            <select id="card-action" onchange="toggleCardBranch()">
+              <option value="play">Play — click a branch</option>
+              <option value="discard">Discard — remove from hand</option>
+              <option value="hold">Hold — leave in hand</option>
+            </select>
+          </div>
+          <div id="card-branch-col">
+            <div class="section-label" style="margin-top:0.5rem">Branches to Try</div>
+            <div id="card-branches-list"></div>
+            <button class="btn btn-teal btn-sm" onclick="addCardBranch()" style="margin-top:0.3rem">+ Add Branch</button>
+            <div class="hint">Branches are tried in order. The first one that is available and meets its condition will be played.</div>
+          </div>
+        </div>
+        <label style="margin-top:0.5rem">Priority (optional)</label>
+        <input type="number" id="card-priority" value="" min="1" placeholder="e.g. 1 = best, 2 = fallback">
+        <div class="hint">Cards with a priority number and branch will be played as a fallback when the hand is full and nothing else can be done. Lower number = played first.</div>
+
+        <div style="margin-top:0.5rem">
+          <label>Equipment (optional)</label>
+          <select id="card-equip-mode" onchange="toggleCardEquipMode()">
+            <option value="none">Do nothing — keep current equipment</option>
+            <option value="maximise">Equip (Maximise Stat)</option>
+            <option value="outfit">Equip (Specific Outfit)</option>
+          </select>
+          <div id="card-equip-maximise" style="display:none;margin-top:0.4rem">
+            <label>Stats to Maximise</label>
+            <input type="text" id="card-equip-stats" placeholder="e.g. Watchful or Watchful, Shadowy">
+          </div>
+          <div id="card-equip-outfit" style="display:none;margin-top:0.4rem">
+            <label>Outfit Name</label>
+            <input type="text" id="card-equip-outfit-name" placeholder="e.g. Morning">
+          </div>
+        </div>
+
+        <button class="btn btn-gold btn-full" onclick="saveCardEntry()">✦ Save Card</button>
+      </div>
+
+      <div id="card-db-list">
+        <div class="empty-hint">Loading card database...</div>
+      </div>
+    </div>
+
+
+
+
+
+    <!-- TAB: JSON -->
+    <div class="tab-panel" id="tab-json">
+      <textarea id="json-output" readonly placeholder="Your task JSON will appear here..."></textarea>
+      <div class="row-buttons">
+        <button class="btn btn-gold" onclick="downloadJSON()">⬇ Download JSON</button>
+        <button class="btn btn-teal" onclick="copyJSON()">⎘ Copy</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  
+  let storylets          = [];
+  let priorityBranchCount = 0;
+  let exitBranchCount     = 0;
+  let botRunning          = false;
+  let autoScroll          = true;
+  let eventSource         = null;
+  let cardBranchCount = 0;
+
+  
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const names = ['builder', 'logs', 'json', 'cards', 'blacklist'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === `tab-${name}`);
+    });
+    if (name === 'json') updateJSON();
+    if (name === 'cards') refreshCardDb();
+    if (name === 'blacklist') refreshBlacklist();
+  }
+
+  
+  document.getElementById('repeat-forever').addEventListener('change', function() {
+    document.getElementById('max-iter-row').style.display = this.checked ? 'none' : 'block';
+  });
+
+  document.getElementById('branch-mode').addEventListener('change', function() {
+    const isSimple = this.value === 'simple';
+    document.getElementById('simple-branch-section').style.display  = isSimple ? 'block' : 'none';
+    document.getElementById('priority-branch-section').style.display = isSimple ? 'none'  : 'block';
+    if (!isSimple && document.getElementById('priority-branches-list').children.length === 0) {
+      addPriorityBranch(); addPriorityBranch();
+    }
+  });
+
+  function toggleSimpleCondition() {
+    const cb = document.getElementById('simple-has-condition');
+    document.getElementById('simple-condition-block').style.display = cb.checked ? 'block' : 'none';
+  }
+
+  function toggleNested() {
+    const cb = document.getElementById('has-nested');
+    document.getElementById('nested-block').style.display = cb.checked ? 'block' : 'none';
+  }
+
+
+
+  function toggleEquipMode() {
+    const mode = document.getElementById('equip-mode').value;
+    document.getElementById('equip-maximise-block').style.display = mode === 'maximise' ? 'block' : 'none';
+    document.getElementById('equip-outfit-block').style.display   = mode === 'outfit'   ? 'block' : 'none';
+  }
+
+  function getEquipConfig() {
+    const mode = document.getElementById('equip-mode').value;
+    if (mode === 'none') return null;
+    if (mode === 'maximise') {
+      const statsRaw = document.getElementById('equip-stats').value.trim();
+      if (!statsRaw) return null;
+      const stats = statsRaw.split(',').map(s => s.trim()).filter(Boolean);
+      return { mode: 'maximise', stats: stats.length === 1 ? stats[0] : stats };
+    }
+    if (mode === 'outfit') {
+      const outfit = document.getElementById('equip-outfit').value.trim();
+      if (!outfit) return null;
+      return { mode: 'outfit', outfit };
+    }
+    return null;
+  }
+
+  function toggleUseItemEquipMode() {
+    const mode = document.getElementById('use-item-equip-mode').value;
+    document.getElementById('use-item-equip-maximise').style.display = mode === 'maximise' ? 'block' : 'none';
+    document.getElementById('use-item-equip-outfit').style.display   = mode === 'outfit'   ? 'block' : 'none';
+  }
+
+
+  function toggleCardEquipMode() {
+    const mode = document.getElementById('card-equip-mode').value;
+    document.getElementById('card-equip-maximise').style.display = mode === 'maximise' ? 'block' : 'none';
+    document.getElementById('card-equip-outfit').style.display   = mode === 'outfit'   ? 'block' : 'none';
+  }
+
+  function getCardEquipConfig() {
+    const mode = document.getElementById('card-equip-mode').value;
+    if (mode === 'none') return null;
+    if (mode === 'maximise') {
+      const statsRaw = document.getElementById('card-equip-stats').value.trim();
+      if (!statsRaw) return null;
+      const stats = statsRaw.split(',').map(s => s.trim()).filter(Boolean);
+      return { mode: 'maximise', stats: stats.length === 1 ? stats[0] : stats };
+    }
+    if (mode === 'outfit') {
+      const outfit = document.getElementById('card-equip-outfit-name').value.trim();
+      if (!outfit) return null;
+      return { mode: 'outfit', outfit };
+    }
+    return null;
+  }
+
+  function resetEquipFields() {
+    document.getElementById('equip-mode').value = 'none';
+    document.getElementById('equip-maximise-block').style.display = 'none';
+    document.getElementById('equip-outfit-block').style.display   = 'none';
+    document.getElementById('equip-stats').value  = '';
+    document.getElementById('equip-outfit').value = '';
+  }
+
+
+
+
+  function toggleCardCondition() {
+    document.getElementById('card-condition-block').style.display =
+      document.getElementById('card-has-condition').checked ? 'block' : 'none';
+  }
+
+  function toggleStepType() {
+    const type = document.getElementById('step-type').value;
+    document.getElementById('step-storylet').style.display    = type === 'storylet'   ? 'block' : 'none';
+    document.getElementById('step-draw-cards').style.display  = type === 'draw_cards' ? 'block' : 'none';
+    document.getElementById('step-use-item').style.display    = type === 'use_item'   ? 'block' : 'none';
+  }
+
+  document.getElementById('draw-mode')?.addEventListener('change', function() {
+    document.getElementById('draw-count-row').style.display = this.value === 'finite' ? 'block' : 'none';
+  });
+
+  function addDrawCardsStep() {
+    const mode  = document.getElementById('draw-mode').value;
+    const count = parseInt(document.getElementById('draw-count').value) || 3;
+    const step = { type: 'draw_cards', mode };
+    if (mode === 'finite') step.count = count;
+    const autoPriority = parseInt(document.getElementById('draw-auto-priority').value);
+    if (!isNaN(autoPriority)) step.autoPlayPriority = autoPriority;
+    storylets.push(step);
+    renderStoryletPreview();
+    document.getElementById('draw-count').value = '3';
+    document.getElementById('draw-mode').value  = 'finite';
+    document.getElementById('draw-count-row').style.display = 'block';
+    document.getElementById('draw-auto-priority').value = '';
+  }
+
+  function addUseItemStep() {
+    const item   = document.getElementById('use-item-name').value.trim();
+    const branch = document.getElementById('use-item-branch').value.trim();
+    if (!item)   { alert('Please enter an item name.'); return; }
+    if (!branch) { alert('Please enter a branch name.'); return; }
+    
+    const step = { type: 'use_item', item, branch };
+    
+    const mode = document.getElementById('use-item-equip-mode').value;
+    if (mode === 'maximise') {
+      const statsRaw = document.getElementById('use-item-equip-stats').value.trim();
+      if (statsRaw) {
+        const stats = statsRaw.split(',').map(s => s.trim()).filter(Boolean);
+        step.equipment = { mode: 'maximise', stats: stats.length === 1 ? stats[0] : stats };
+      }
+    } else if (mode === 'outfit') {
+      const outfit = document.getElementById('use-item-equip-outfit-name').value.trim();
+      if (outfit) step.equipment = { mode: 'outfit', outfit };
+    }
+
+    storylets.push(step);
+    renderStoryletPreview();
+    document.getElementById('use-item-name').value          = '';
+    document.getElementById('use-item-branch').value        = '';
+    document.getElementById('use-item-equip-mode').value    = 'none';
+    document.getElementById('use-item-equip-maximise').style.display = 'none';
+    document.getElementById('use-item-equip-outfit').style.display   = 'none';
+    document.getElementById('use-item-equip-stats').value       = '';
+    document.getElementById('use-item-equip-outfit-name').value = '';
+  }
+
+
+
+
+  function togglePBNested(id) {
+    document.getElementById(`pb-nested-block-${id}`).style.display =
+      document.getElementById(`pb-nested-${id}`).checked ? 'block' : 'none';
+  }
+
+  document.getElementById('auto-scroll').addEventListener('change', function() {
+    autoScroll = this.checked;
+  });
+
+  
+  function addPriorityBranch() {
+    priorityBranchCount++;
+    const id   = priorityBranchCount;
+    const list = document.getElementById('priority-branches-list');
+    const div  = document.createElement('div');
+    div.className = 'branch-row';
+    div.id = `pb-${id}`;
+    div.innerHTML = `
+      <div class="branch-row-header">
+        <span class="badge badge-gold" id="pb-badge-${id}">Priority ${list.children.length + 1}</span>
+        <button class="btn btn-crimson" onclick="removePriorityBranch(${id})">✕</button>
+      </div>
+      <label>Branch Name</label>
+      <input type="text" id="pb-name-${id}" placeholder="e.g. Pass the floor to a spider...">
+      <div class="toggle-row" style="margin-top:0.4rem">
+        <input type="checkbox" id="pb-cond-${id}" onchange="togglePBCondition(${id})">
+        <label for="pb-cond-${id}">Add condition</label>
+      </div>
+
+      <div class="toggle-row" style="margin-top:0.4rem">
+        <input type="checkbox" id="pb-nested-${id}" onchange="togglePBNested(${id})">
+        <label for="pb-nested-${id}">Add nested branch for this action</label>
+      </div>
+      <div id="pb-nested-block-${id}" class="condition-block" style="display:none;margin-top:0.4rem">
+        <label>Branch to Click Inside the Redirect</label>
+        <input type="text" id="pb-nested-branch-${id}" placeholder="e.g. A Watchmaker's Hill mulligatawny">
+      </div>
+
+
+      <div id="pb-cond-block-${id}" class="condition-block" style="display:none;margin-top:0.4rem">
+        <div class="three-col">
+          <div><label>Quality</label><input type="text" id="pb-cq-${id}" placeholder="e.g. Wounds"></div>
+          <div><label>Operator</label>
+            <select id="pb-co-${id}">
+              <option value="above">above</option><option value="below">below</option>
+              <option value="at_least">at least</option><option value="at_most">at most</option>
+              <option value="equals">equals</option>
+            </select>
+          </div>
+          <div><label>Value</label><input type="number" id="pb-cv-${id}" value="0"></div>
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
+    updatePriorityBadges();
+  }
+
+
+  function addCardBranch() {
+    cardBranchCount++;
+    const id   = cardBranchCount;
+    const list = document.getElementById('card-branches-list');
+    const div  = document.createElement('div');
+    div.className = 'branch-row';
+    div.id = `cb-${id}`;
+    div.innerHTML = `
+      <div class="branch-row-header">
+        <span class="badge badge-gold">Branch ${list.children.length + 1}</span>
+        <button class="btn btn-crimson" onclick="document.getElementById('cb-${id}').remove(); updateCardBranchBadges()">✕</button>
+      </div>
+      <label>Branch Name</label>
+      <input type="text" id="cb-name-${id}" placeholder="e.g. Firecrackers in the thurible!">
+      <div class="toggle-row" style="margin-top:0.4rem">
+        <input type="checkbox" id="cb-cond-${id}" onchange="toggleCardBranchCondition(${id})">
+        <label for="cb-cond-${id}">Add condition</label>
+      </div>
+      <div id="cb-cond-block-${id}" class="condition-block" style="display:none;margin-top:0.4rem">
+        <div class="three-col">
+          <div><label>Quality</label><input type="text" id="cb-cq-${id}" placeholder="e.g. Wounds"></div>
+          <div><label>Operator</label>
+            <select id="cb-co-${id}">
+              <option value="above">above</option>
+              <option value="below">below</option>
+              <option value="at_least">at least</option>
+              <option value="at_most">at most</option>
+              <option value="equals">equals</option>
+            </select>
+          </div>
+          <div><label>Value</label><input type="number" id="cb-cv-${id}" value="0"></div>
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
+    updateCardBranchBadges();
+  }
+
+
+  function updateCardBranchBadges() {
+    document.querySelectorAll('#card-branches-list .branch-row').forEach((row, i) => {
+      const badge = row.querySelector('.badge');
+      if (badge) badge.textContent = `Branch ${i + 1}`;
+    });
+  }
+
+  function toggleCardBranchCondition(id) {
+    document.getElementById(`cb-cond-block-${id}`).style.display =
+      document.getElementById(`cb-cond-${id}`).checked ? 'block' : 'none';
+  }
+
+
+
+
+  function removePriorityBranch(id) {
+    document.getElementById(`pb-${id}`)?.remove();
+    updatePriorityBadges();
+  }
+
+  function updatePriorityBadges() {
+    document.querySelectorAll('#priority-branches-list .branch-row').forEach((row, i) => {
+      const id = row.id.replace('pb-', '');
+      const badge = document.getElementById(`pb-badge-${id}`);
+      if (badge) badge.textContent = `Priority ${i + 1}`;
+    });
+  }
+
+  function togglePBCondition(id) {
+    document.getElementById(`pb-cond-block-${id}`).style.display =
+      document.getElementById(`pb-cond-${id}`).checked ? 'block' : 'none';
+  }
+
+  
+  function addExitBranch() {
+    exitBranchCount++;
+    const id   = exitBranchCount;
+    const list = document.getElementById('exit-branches-list');
+    const div  = document.createElement('div');
+    div.className = 'branch-row';
+    div.id = `eb-${id}`;
+    div.innerHTML = `
+      <div class="branch-row-header">
+        <span class="badge badge-exit">Exit Branch</span>
+        <button class="btn btn-crimson" onclick="document.getElementById('eb-${id}').remove()">✕</button>
+      </div>
+      <label>Branch Name</label>
+      <input type="text" id="eb-name-${id}" placeholder="e.g. Accept a Volume of Collated Research">
+    `;
+    list.appendChild(div);
+  }
+
+  
+  function addStorylet() {
+    const target    = document.getElementById('new-storylet-target').value.trim();
+    const mode      = document.getElementById('branch-mode').value;
+    const hasNested = document.getElementById('has-nested').checked;
+
+    if (!target) { alert('Please enter a storylet title.'); return; }
+
+    const storylet = { target };
+
+    if (mode === 'simple') {
+      const branch = document.getElementById('simple-branch').value.trim();
+      if (!branch) { alert('Please enter a branch name.'); return; }
+      storylet.branch = branch;
+
+      if (document.getElementById('simple-has-condition').checked) {
+        const quality  = document.getElementById('sc-quality').value.trim();
+        const operator = document.getElementById('sc-operator').value;
+        const value    = parseFloat(document.getElementById('sc-value').value);
+        if (quality) storylet.condition = { quality, operator, value };
+      }
+    } else {
+      const rows = document.querySelectorAll('#priority-branches-list .branch-row');
+      if (rows.length === 0) { alert('Add at least one priority branch.'); return; }
+
+      storylet.branches = [];
+      let valid = true;
+
+      rows.forEach((row, i) => {
+        const id   = row.id.replace('pb-', '');
+        const name = document.getElementById(`pb-name-${id}`)?.value.trim();
+        if (!name) { alert(`Priority branch ${i + 1} needs a name.`); valid = false; return; }
+
+        const entry = { priority: i + 1, branch: name };
+        if (document.getElementById(`pb-cond-${id}`)?.checked) {
+          const quality  = document.getElementById(`pb-cq-${id}`)?.value.trim();
+          const operator = document.getElementById(`pb-co-${id}`)?.value;
+          const value    = parseFloat(document.getElementById(`pb-cv-${id}`)?.value);
+          if (quality) entry.condition = { quality, operator, value };
+        }
+
+        const nestedCb = document.getElementById(`pb-nested-${id}`);
+        if (nestedCb?.checked) {
+          const nestedBranch = document.getElementById(`pb-nested-branch-${id}`)?.value.trim();
+          if (nestedBranch) entry.nestedStorylet = { branch: nestedBranch };
+        }
+        storylet.branches.push(entry);
+      });
+
+      if (!valid) return;
+
+      const exitRows = document.querySelectorAll('#exit-branches-list .branch-row');
+      if (exitRows.length > 0) {
+        storylet.exitBranches = [];
+        exitRows.forEach(row => {
+          const id   = row.id.replace('eb-', '');
+          const name = document.getElementById(`eb-name-${id}`)?.value.trim();
+          if (name) storylet.exitBranches.push(name);
+        });
+      }
+    }
+
+    if (hasNested) {
+      const nb = document.getElementById('nested-branch').value.trim();
+      if (nb) storylet.nestedStorylet = { branch: nb };
+    }
+
+    const equipConfig = getEquipConfig();
+    if (equipConfig) storylet.equipment = equipConfig;
+
+    storylets.push(storylet);
+    renderStoryletPreview();
+    resetStoryletForm();
+  }
+
+
+  function editStorylet(i) {
+    const s = storylets[i];
+
+    if (s.type === 'draw_cards') {
+      document.getElementById('step-type').value = 'draw_cards';
+      toggleStepType();
+      document.getElementById('draw-mode').value = s.mode;
+      document.getElementById('draw-count-row').style.display = s.mode === 'finite' ? 'block' : 'none';
+      if (s.count) document.getElementById('draw-count').value = s.count;
+      document.getElementById('draw-auto-priority').value = s.autoPlayPriority ?? '';
+      storylets.splice(i, 1);
+      renderStoryletPreview();
+      return;
+    }
+
+    if (s.type === 'use_item') {
+      document.getElementById('step-type').value = 'use_item';
+      toggleStepType();
+      document.getElementById('use-item-name').value   = s.item;
+      document.getElementById('use-item-branch').value = s.branch;
+      storylets.splice(i, 1);
+      renderStoryletPreview();
+      return;
+    }
+
+    document.getElementById('step-type').value = 'storylet';
+    toggleStepType();
+    document.getElementById('new-storylet-target').value = s.target;
+
+    if (s.branch) {
+      document.getElementById('branch-mode').value = 'simple';
+      document.getElementById('simple-branch-section').style.display  = 'block';
+      document.getElementById('priority-branch-section').style.display = 'none';
+      document.getElementById('simple-branch').value = s.branch;
+
+      if (s.condition) {
+        document.getElementById('simple-has-condition').checked = true;
+        document.getElementById('simple-condition-block').style.display = 'block';
+        document.getElementById('sc-quality').value   = s.condition.quality;
+        document.getElementById('sc-operator').value  = s.condition.operator;
+        document.getElementById('sc-value').value     = s.condition.value;
+      }
+    } else if (s.branches) {
+      document.getElementById('branch-mode').value = 'priority';
+      document.getElementById('simple-branch-section').style.display  = 'none';
+      document.getElementById('priority-branch-section').style.display = 'block';
+      document.getElementById('priority-branches-list').innerHTML = '';
+      document.getElementById('exit-branches-list').innerHTML = '';
+      priorityBranchCount = 0;
+      exitBranchCount = 0;
+
+      s.branches.forEach(() => addPriorityBranch());
+      const rows = document.querySelectorAll('#priority-branches-list .branch-row');
+      s.branches.forEach((b, idx) => {
+        const id = rows[idx].id.replace('pb-', '');
+        document.getElementById(`pb-name-${id}`).value = b.branch;
+        if (b.condition) {
+          document.getElementById(`pb-cond-${id}`).checked = true;
+          document.getElementById(`pb-cond-block-${id}`).style.display = 'block';
+          document.getElementById(`pb-cq-${id}`).value  = b.condition.quality;
+          document.getElementById(`pb-co-${id}`).value  = b.condition.operator;
+          document.getElementById(`pb-cv-${id}`).value  = b.condition.value;
+        }
+
+        if (b.nestedStorylet) {
+          document.getElementById(`pb-nested-${id}`).checked = true;
+          document.getElementById(`pb-nested-block-${id}`).style.display = 'block';
+          document.getElementById(`pb-nested-branch-${id}`).value = b.nestedStorylet.branch;
+        }
+      });
+
+      if (s.exitBranches?.length) {
+        s.exitBranches.forEach(() => addExitBranch());
+        const exitRows = document.querySelectorAll('#exit-branches-list .branch-row');
+        s.exitBranches.forEach((name, idx) => {
+          const id = exitRows[idx].id.replace('eb-', '');
+          document.getElementById(`eb-name-${id}`).value = name;
+        });
+      }
+    }
+
+    if (s.nestedStorylet) {
+      document.getElementById('has-nested').checked = true;
+      document.getElementById('nested-block').style.display = 'block';
+      document.getElementById('nested-branch').value = s.nestedStorylet.branch;
+    }
+
+    if (s.equipment) {
+      document.getElementById('equip-mode').value = s.equipment.mode;
+      toggleEquipMode();
+      if (s.equipment.mode === 'maximise') {
+        const stats = Array.isArray(s.equipment.stats) ? s.equipment.stats.join(', ') : s.equipment.stats;
+        document.getElementById('equip-stats').value = stats;
+      }
+      if (s.equipment.mode === 'outfit') {
+        document.getElementById('equip-outfit').value = s.equipment.outfit;
+      }
+    }
+
+    storylets.splice(i, 1);
+    renderStoryletPreview();
+  }
+
+
+  function removeStorylet(i) {
+    storylets.splice(i, 1);
+    renderStoryletPreview();
+  }
+
+  function moveStorylet(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= storylets.length) return;
+    [storylets[i], storylets[j]] = [storylets[j], storylets[i]];
+    renderStoryletPreview();
+  }
+
+  function renderStoryletPreview() {
+    const el = document.getElementById('storylet-list-preview');
+    if (storylets.length === 0) {
+      el.innerHTML = '<div class="empty-hint">No storylets added yet</div>';
+      return;
+    }
+    el.innerHTML = storylets.map((s, i) => {
+      let branchInfo = '';
+      let stepTitle  = '';
+
+      if (s.type === 'draw_cards') {
+        stepTitle  = `🃏 Draw Cards`;
+        branchInfo = `<span class="badge badge-teal" style="font-size:0.65rem">${s.mode}${s.mode === 'finite' ? ` × ${s.count}` : ''}</span>`;
+      } else if (s.type === 'use_item') {
+        stepTitle  = `📦 Use Item`;
+        branchInfo = `<span class="badge badge-teal" style="font-size:0.65rem">${s.item.slice(0,25)}...</span>`;
+      } else if (s.branch) {
+        stepTitle  = s.target;
+        branchInfo = `<span class="badge badge-teal" style="font-size:0.65rem">${s.branch.slice(0,30)}${s.branch.length>30?'...':''}</span>`;
+      } else if (s.branches) {
+        stepTitle  = s.target;
+        branchInfo = s.branches.map(b =>
+          `<span class="badge badge-gold" style="font-size:0.62rem;margin-right:0.2rem">P${b.priority}: ${b.branch.slice(0,20)}...</span>`
+        ).join('');
+      }
+      return `
+        <div class="storylet-preview-item">
+          <div class="storylet-preview-title">
+            <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-light);margin-bottom:0.2rem">[${i+1}] ${stepTitle}</div>
+            <div>${branchInfo}</div>
+            ${s.nestedStorylet ? `<div style="font-size:0.75rem;color:#7fcfcf;margin-top:0.2rem">↳ nested: ${s.nestedStorylet.branch.slice(0,25)}...</div>` : ''}
+            ${s.equipment && s.equipment.mode !== 'none' ? `<div style="font-size:0.75rem;color:#e8b84b;margin-top:0.2rem">⚔ ${s.equipment.mode === 'maximise' ? `Maximise: ${Array.isArray(s.equipment.stats) ? s.equipment.stats.join('+') : s.equipment.stats}` : `Outfit: ${s.equipment.outfit}`}</div>` : ''}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.2rem">
+            ${i > 0 ? `<button class="btn btn-teal btn-sm" onclick="moveStorylet(${i},-1)">↑</button>` : ''}
+            ${i < storylets.length-1 ? `<button class="btn btn-teal btn-sm" onclick="moveStorylet(${i},1)">↓</button>` : ''}
+            <button class="btn btn-teal btn-sm" onclick="editStorylet(${i})">✎</button>
+            <button class="btn btn-crimson" onclick="removeStorylet(${i})">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function resetStoryletForm() {
+    document.getElementById('new-storylet-target').value = '';
+    document.getElementById('simple-branch').value = '';
+    document.getElementById('branch-mode').value = 'simple';
+    document.getElementById('simple-branch-section').style.display  = 'block';
+    document.getElementById('priority-branch-section').style.display = 'none';
+    document.getElementById('simple-has-condition').checked = false;
+    document.getElementById('simple-condition-block').style.display = 'none';
+    document.getElementById('has-nested').checked = false;
+    document.getElementById('nested-block').style.display = 'none';
+    document.getElementById('nested-branch').value = '';
+    document.getElementById('priority-branches-list').innerHTML = '';
+    document.getElementById('exit-branches-list').innerHTML = '';
+    priorityBranchCount = 0;
+    exitBranchCount = 0;
+
+    document.getElementById('step-type').value = 'storylet';
+    document.getElementById('step-storylet').style.display   = 'block';
+    document.getElementById('step-draw-cards').style.display = 'none';
+    document.getElementById('step-use-item').style.display   = 'none';
+    resetEquipFields();
+  }
+
+  
+  function buildTask() {
+    const repeatForever = document.getElementById('repeat-forever').checked;
+    const task = {
+      name:                    document.getElementById('task-name').value || 'My Task',
+      location:                document.getElementById('task-location').value || '',
+      repeatUntilOutOfActions: repeatForever,
+      retryDelaySeconds:       parseInt(document.getElementById('retry-delay').value) || 10,
+      minActionsToResume: parseInt(document.getElementById('min-actions').value) || 1,
+      storylets,
+    };
+    if (!repeatForever) task.maxIterations = parseInt(document.getElementById('max-iterations').value) || 5;
+    return task;
+  }
+
+  function updateJSON() {
+    document.getElementById('json-output').value = JSON.stringify(buildTask(), null, 2);
+  }
+
+  
+  async function saveTask() {
+    if (storylets.length === 0) { alert('Add at least one storylet before saving.'); return; }
+    const task = buildTask();
+    if (!task.location) { alert('Please enter a location.'); return; }
+
+    try {
+      const res  = await fetch('/tasks/save', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name: task.name, task }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Task saved as "${data.fileName}"`);
+        refreshTaskList();
+      } else {
+        alert(`Failed to save: ${data.error}`);
+      }
+    } catch {
+      alert('Could not connect to server. Make sure start-bot.bat is running.');
+    }
+  }
+
+  
+  async function refreshTaskList() {
+    try {
+      const res   = await fetch('/tasks');
+      const data  = await res.json();
+      const list  = document.getElementById('task-list');
+      const sel   = document.getElementById('selected-task-file');
+
+      sel.innerHTML = '<option value="">— select a task —</option>';
+
+      if (data.tasks.length === 0) {
+        list.innerHTML = '<div class="empty-hint">No tasks saved yet</div>';
+        return;
+      }
+
+      list.innerHTML = data.tasks.map(f => `
+        <div class="task-item" id="task-item-${f}">
+          <div class="task-item-name" onclick="selectTask('${f}')" style="cursor:pointer">${f.replace('.json','')}</div>
+          <div class="task-item-file">${f}</div>
+          <div style="display:flex;gap:0.4rem;margin-top:0.4rem">
+            <button class="btn btn-teal btn-sm" onclick="loadTask('${f}')">Load</button>
+            <button class="btn btn-crimson" onclick="deleteTask('${f}')">✕ Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+      data.tasks.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        sel.appendChild(opt);
+      });
+
+      updateStartButton();
+    } catch {
+      // Server not running — silent fail
+    }
+  }
+
+
+  async function loadTask(fileName) {
+    try {
+      const res  = await fetch(`/tasks/${fileName}`);
+      const task = await res.json();
+
+      document.getElementById('task-name').value     = task.name || '';
+      document.getElementById('task-location').value = task.location || '';
+      document.getElementById('retry-delay').value   = task.retryDelaySeconds || 10;
+      document.getElementById('min-actions').value   = task.minActionsToResume || 1;
+
+      const repeatForever = task.repeatUntilOutOfActions !== false;
+      document.getElementById('repeat-forever').checked = repeatForever;
+      document.getElementById('max-iter-row').style.display = repeatForever ? 'none' : 'block';
+      if (!repeatForever) {
+        document.getElementById('max-iterations').value = task.maxIterations || 5;
+      }
+
+      storylets = task.storylets || [];
+      renderStoryletPreview();
+      updateJSON();
+
+      switchTab('builder');
+      alert(`Task "${task.name}" loaded for editing. Make your changes and click Save Task.`);
+    } catch {
+      alert('Could not load task. Make sure the server is running.');
+    }
+  }
+
+  async function deleteTask(fileName) {
+    if (!confirm(`Delete "${fileName}"? This cannot be undone.`)) return;
+    try {
+      const res  = await fetch(`/tasks/delete`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ fileName }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshTaskList();
+      } else {
+        alert(`Failed to delete: ${data.error}`);
+      }
+    } catch {
+      alert('Could not connect to server.');
+    }
+  }
+
+
+
+  function selectTask(fileName) {
+    document.getElementById('selected-task-file').value = fileName;
+    document.querySelectorAll('.task-item').forEach(el => {
+      el.classList.toggle('active', el.querySelector('.task-item-file').textContent === fileName);
+    });
+    updateStartButton();
+  }
+
+  document.getElementById('selected-task-file').addEventListener('change', updateStartButton);
+
+  function updateStartButton() {
+    const hasTask  = !!document.getElementById('selected-task-file').value;
+    const startBtn = document.getElementById('btn-start');
+    const stopBtn  = document.getElementById('btn-stop');
+    startBtn.disabled = !hasTask || botRunning;
+    stopBtn.disabled  = !botRunning;
+  }
+
+  
+  async function startBot() {
+    const taskFile = document.getElementById('selected-task-file').value;
+    if (!taskFile) { alert('Select a task first.'); return; }
+
+    try {
+      const res  = await fetch('/bot/start', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ taskFile }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        switchTab('logs');
+        addLogLine({ type: 'system', text: `Bot started with task: ${taskFile}` });
+      }
+    } catch {
+      alert('Could not connect to server.');
+    }
+  }
+
+  async function stopBot() {
+    try {
+      await fetch('/bot/stop', { method: 'POST' });
+      setTimeout(async () => {
+        const res  = await fetch('/status');
+        const data = await res.json();
+        if (!data.running) setBotStatus(false);
+      }, 2000);
+    } catch {
+      alert('Could not connect to server.');
+    }
+  }
+
+  
+  function connectSSE() {
+    if (eventSource) eventSource.close();
+
+    eventSource = new EventSource('/logs');
+
+    eventSource.onmessage = e => {
+      const msg = JSON.parse(e.data);
+
+      if (msg.type === 'status') {
+        setBotStatus(msg.running);
+        return;
+      }
+
+      if (msg.type === 'stopped') {
+        setBotStatus(false);
+        return;
+      }
+
+      addLogLine(msg);
+    };
+
+    eventSource.onerror = () => {
+      // Server not running — retry silently
+      setTimeout(connectSSE, 3000);
+    };
+  }
+
+  function addLogLine(msg) {
+    const win  = document.getElementById('log-window');
+    const div  = document.createElement('div');
+    div.className = 'log-line';
+
+    const text = msg.text || '';
+    const type = msg.type || 'info';
+
+    if (type === 'system') {
+      div.className += ' log-system';
+      div.textContent = `— ${text}`;
+    } else if (text.includes('[SUCCESS]')) {
+      div.className += ' log-success';
+      div.textContent = text;
+    } else if (text.includes('[ERROR]')) {
+      div.className += ' log-error';
+      div.textContent = text;
+    } else if (text.includes('[WARN]')) {
+      div.className += ' log-warn';
+      div.textContent = text;
+    } else if (text.includes('[ACTION]')) {
+      div.className += ' log-action';
+      div.textContent = text;
+    } else if (text.includes('[STATE]')) {
+      div.className += ' log-state';
+      div.textContent = text;
+    } else {
+      div.className += ' log-info';
+      div.textContent = text;
+    }
+
+    win.appendChild(div);
+
+    // Keep log to 1000 lines
+    while (win.children.length > 1000) win.removeChild(win.firstChild);
+
+    if (autoScroll) win.scrollTop = win.scrollHeight;
+  }
+
+  function clearLogs() {
+    document.getElementById('log-window').innerHTML =
+      '<div class="log-line log-system">Logs cleared</div>';
+  }
+
+  function setBotStatus(running) {
+    botRunning = running;
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    dot.className  = `status-dot ${running ? 'running' : 'stopped'}`;
+    text.textContent = running ? 'Bot running' : 'Bot stopped';
+    updateStartButton();
+  }
+
+  
+  function downloadJSON() {
+    const json = JSON.stringify(buildTask(), null, 2);
+    const name = (document.getElementById('task-name').value || 'task').toLowerCase().replace(/\s+/g, '-');
+    const blob = new Blob([json], { type: 'application/json' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = `${name}.json`;
+    a.click();
+  }
+
+  function copyJSON() {
+    navigator.clipboard.writeText(JSON.stringify(buildTask(), null, 2))
+      .then(() => alert('Copied!'));
+  }
+
+  function clearAll() {
+    if (!confirm('Clear all storylets?')) return;
+    storylets = [];
+    renderStoryletPreview();
+    document.getElementById('task-name').value     = 'My Task';
+    document.getElementById('task-location').value = '';
+    document.getElementById('json-output').value   = '';
+  }
+
+  
+  ['task-name','task-location','retry-delay','max-iterations'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      if (document.getElementById('tab-json').classList.contains('active')) updateJSON();
+    });
+  });
+
+
+  let cardDb = [];
+
+  function toggleCardBranch() {
+    const action = document.getElementById('card-action').value;
+    document.getElementById('card-branch-col').style.display = action === 'play' ? 'block' : 'none';
+  }
+
+  async function refreshCardDb() {
+    try {
+      const res  = await fetch('/cards');
+      const data = await res.json();
+      cardDb     = data.cards || [];
+      renderCardDb();
+    } catch {
+      document.getElementById('card-db-list').innerHTML = '<div class="empty-hint">Could not load card database — make sure the server is running.</div>';
+    }
+  }
+
+  function renderCardDb() {
+    const el = document.getElementById('card-db-list');
+    if (cardDb.length === 0) {
+      el.innerHTML = '<div class="empty-hint">No cards in database yet — add one above.</div>';
+      return;
+    }
+    el.innerHTML = cardDb.map((c, i) => `
+      <div class="storylet-preview-item">
+        <div class="storylet-preview-title">
+          <div style="font-family:'Cinzel',serif;font-size:0.72rem;color:var(--gold-light);margin-bottom:0.2rem">${c.name}</div>
+          <div>
+            <span class="badge ${c.action === 'play' ? 'badge-gold' : c.action === 'discard' ? 'badge-exit' : 'badge-teal'}" style="font-size:0.65rem">${c.action}${c.priority != null ? ` P${c.priority}` : ''}</span>
+            ${c.branch ? `<span style="font-size:0.8rem;margin-left:0.4rem;color:var(--aged)">→ ${c.branch.slice(0,40)}${c.branch.length>40?'...':''}</span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.2rem">
+          <button class="btn btn-teal btn-sm" onclick="editCardEntry(${i})">✎</button>
+          <button class="btn btn-crimson" onclick="deleteCardEntry(${i})">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function editCardEntry(i) {
+    const c = cardDb[i];
+    document.getElementById('card-name').value   = c.name;
+    document.getElementById('card-action').value = c.action;
+    document.getElementById('card-branch-col').style.display = c.action === 'play' ? 'block' : 'none';
+    document.getElementById('card-branches-list').innerHTML = '';
+    cardBranchCount = 0;
+    if (c.branch) {
+      addCardBranch();
+      const rows = document.querySelectorAll('#card-branches-list .branch-row');
+      const id   = rows[0].id.replace('cb-', '');
+      document.getElementById(`cb-name-${id}`).value = c.branch;
+      if (c.condition) {
+        document.getElementById(`cb-cond-${id}`).checked = true;
+        document.getElementById(`cb-cond-block-${id}`).style.display = 'block';
+        document.getElementById(`cb-cq-${id}`).value  = c.condition.quality;
+        document.getElementById(`cb-co-${id}`).value  = c.condition.operator;
+        document.getElementById(`cb-cv-${id}`).value  = c.condition.value;
+      }
+    } else if (c.branches) {
+      c.branches.forEach(b => {
+        addCardBranch();
+        const rows = document.querySelectorAll('#card-branches-list .branch-row');
+        const id   = rows[rows.length - 1].id.replace('cb-', '');
+        document.getElementById(`cb-name-${id}`).value = b.branch;
+        if (b.condition) {
+          document.getElementById(`cb-cond-${id}`).checked = true;
+          document.getElementById(`cb-cond-block-${id}`).style.display = 'block';
+          document.getElementById(`cb-cq-${id}`).value  = b.condition.quality;
+          document.getElementById(`cb-co-${id}`).value  = b.condition.operator;
+          document.getElementById(`cb-cv-${id}`).value  = b.condition.value;
+        }
+      });
+    }
+    document.getElementById('card-priority').value = c.priority ?? '';
+    if (c.equipment) {
+      document.getElementById('card-equip-mode').value = c.equipment.mode;
+      toggleCardEquipMode();
+      if (c.equipment.mode === 'maximise') {
+        const stats = Array.isArray(c.equipment.stats) ? c.equipment.stats.join(', ') : c.equipment.stats;
+        document.getElementById('card-equip-stats').value = stats;
+      }
+      if (c.equipment.mode === 'outfit') {
+        document.getElementById('card-equip-outfit-name').value = c.equipment.outfit;
+      }
+    } else {
+      document.getElementById('card-equip-mode').value = 'none';
+      toggleCardEquipMode();
+    }
+
+
+    if (c.condition) {
+      document.getElementById('card-has-condition').checked = true;
+      document.getElementById('card-condition-block').style.display = 'block';
+      document.getElementById('card-cond-quality').value  = c.condition.quality;
+      document.getElementById('card-cond-operator').value = c.condition.operator;
+      document.getElementById('card-cond-value').value    = c.condition.value;
+    } else {
+      document.getElementById('card-has-condition').checked = false;
+      document.getElementById('card-condition-block').style.display = 'none';
+    }
+    cardDb.splice(i, 1);
+    renderCardDb();
+  }
+
+  async function deleteCardEntry(i) {
+    if (!confirm(`Delete card "${cardDb[i].name}"?`)) return;
+    cardDb.splice(i, 1);
+    await saveCardDb();
+    renderCardDb();
+  }
+
+  async function saveCardEntry() {
+    const name   = document.getElementById('card-name').value.trim();
+    const action = document.getElementById('card-action').value;
+    
+    if (!name) { alert('Please enter a card name.'); return; }
+    if (action === 'play') {
+      const rows = document.querySelectorAll('#card-branches-list .branch-row');
+      const hasAnyBranch = [...rows].some(row => {
+        const id = row.id.replace('cb-', '');
+        return document.getElementById(`cb-name-${id}`)?.value.trim();
+      });
+      if (!hasAnyBranch) { alert('Please add at least one branch name.'); return; }
+    }
+
+    const existing = cardDb.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
+    const entry = { name, action };
+    if (action === 'play') {
+      const rows = document.querySelectorAll('#card-branches-list .branch-row');
+      if (rows.length === 1) {
+        const id     = rows[0].id.replace('cb-', '');
+        const bName  = document.getElementById(`cb-name-${id}`)?.value.trim();
+        if (bName) entry.branch = bName;
+        if (document.getElementById(`cb-cond-${id}`)?.checked) {
+          const quality  = document.getElementById(`cb-cq-${id}`)?.value.trim();
+          const operator = document.getElementById(`cb-co-${id}`)?.value;
+          const value    = parseFloat(document.getElementById(`cb-cv-${id}`)?.value);
+          if (quality) entry.condition = { quality, operator, value };
+        }
+      } else if (rows.length > 1) {
+        entry.branches = [];
+        rows.forEach((row, i) => {
+          const id    = row.id.replace('cb-', '');
+          const bName = document.getElementById(`cb-name-${id}`)?.value.trim();
+          if (!bName) return;
+          const branch = { priority: i + 1, branch: bName };
+          if (document.getElementById(`cb-cond-${id}`)?.checked) {
+            const quality  = document.getElementById(`cb-cq-${id}`)?.value.trim();
+            const operator = document.getElementById(`cb-co-${id}`)?.value;
+            const value    = parseFloat(document.getElementById(`cb-cv-${id}`)?.value);
+            if (quality) branch.condition = { quality, operator, value };
+          }
+          entry.branches.push(branch);
+        });
+      }
+    }
+    const priority = parseInt(document.getElementById('card-priority').value);
+    if (!isNaN(priority)) entry.priority = priority;
+
+    const cardEquip = getCardEquipConfig();
+    if (cardEquip) entry.equipment = cardEquip;
+
+    if (existing >= 0) cardDb[existing] = entry;
+    else cardDb.push(entry);
+
+    await saveCardDb();
+    renderCardDb();
+
+    document.getElementById('card-name').value   = '';
+    document.getElementById('card-action').value = 'play';
+    document.getElementById('card-branch-col').style.display = 'block';
+    document.getElementById('card-branches-list').innerHTML = '';
+    cardBranchCount = 0;
+    addCardBranch();
+    document.getElementById('card-priority').value = '';
+    document.getElementById('card-equip-mode').value = 'none';
+    document.getElementById('card-equip-maximise').style.display = 'none';
+    document.getElementById('card-equip-outfit').style.display   = 'none';
+    document.getElementById('card-equip-stats').value       = '';
+    document.getElementById('card-equip-outfit-name').value = '';
+  }
+
+  async function saveCardDb() {
+    try {
+      await fetch('/cards', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ cards: cardDb }),
+      });
+    } catch {
+      alert('Could not save card database — make sure the server is running.');
+    }
+  }
+
+
+  let blacklistItems = [];
+
+  async function refreshBlacklist() {
+    try {
+      const res  = await fetch('/blacklist');
+      const data = await res.json();
+      blacklistItems = data.blacklist || [];
+      renderBlacklist();
+    } catch {
+      document.getElementById('blacklist-list').innerHTML = '<div class="empty-hint">Could not load blacklist — make sure the server is running.</div>';
+    }
+  }
+
+  function renderBlacklist() {
+    const el = document.getElementById('blacklist-list');
+    if (blacklistItems.length === 0) {
+      el.innerHTML = '<div class="empty-hint">No items blacklisted yet.</div>';
+      return;
+    }
+    el.innerHTML = blacklistItems.map((item, i) => `
+      <div class="storylet-preview-item">
+        <div class="storylet-preview-title">
+          <div style="font-size:0.9rem;color:var(--parchment)">${item}</div>
+        </div>
+        <button class="btn btn-crimson" onclick="removeBlacklistItem(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async function addBlacklistItem() {
+    const name = document.getElementById('blacklist-item').value.trim();
+    if (!name) { alert('Please enter an item name.'); return; }
+    if (blacklistItems.includes(name)) { alert('Item already in blacklist.'); return; }
+    blacklistItems.push(name);
+    await saveBlacklist();
+    renderBlacklist();
+    document.getElementById('blacklist-item').value = '';
+  }
+
+  async function removeBlacklistItem(i) {
+    blacklistItems.splice(i, 1);
+    await saveBlacklist();
+    renderBlacklist();
+  }
+
+  async function saveBlacklist() {
+    try {
+      await fetch('/blacklist', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ blacklist: blacklistItems }),
+      });
+    } catch {
+      alert('Could not save blacklist — make sure the server is running.');
+    }
+  }
+
+  
+  connectSSE();
+  refreshTaskList();
+  addCardBranch();
+</script>
+</body>
+</html>

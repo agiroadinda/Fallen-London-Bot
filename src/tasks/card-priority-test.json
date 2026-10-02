@@ -1,0 +1,18 @@
+{
+  "name": "Card Priority Test",
+  "location": "Your Activities",
+  "repeatUntilOutOfActions": false,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "type": "draw_cards",
+      "mode": "infinite"
+    },
+    {
+      "type": "draw_cards",
+      "mode": "infinite"
+    }
+  ],
+  "maxIterations": 1
+}

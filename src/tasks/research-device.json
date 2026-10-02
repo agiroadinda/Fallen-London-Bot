@@ -1,0 +1,35 @@
+{
+  "name": "research device",
+  "location": "The University",
+  "repeatUntilOutOfActions": true,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "target": "Train your Shifty Student",
+      "branch": "Graduate the Shifty Student"
+    },
+    {
+      "target": "Manage the Students in your Laboratory",
+      "branch": "Tolerate a Shifty Student"
+    },
+    {
+      "target": "Assess your Progress regarding",
+      "branch": "Finish the study of your Highly Illegal Device"
+    },
+    {
+      "target": "Tidying up your University Lab",
+      "branch": "Put everything back where you found it"
+    },
+    {
+      "target": "Begin a Scientific Investigation",
+      "branch": "Study the Augmentation Device"
+    },
+    {
+      "type": "draw_cards",
+      "mode": "finite",
+      "count": 5,
+      "autoPlayPriority": 2
+    }
+  ]
+}

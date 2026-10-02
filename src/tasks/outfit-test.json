@@ -1,0 +1,26 @@
+{
+  "name": "Outfit Test",
+  "location": "The University",
+  "repeatUntilOutOfActions": false,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "target": "An Exceptional Story: The Goblin Poet",
+      "branch": "Take a flyer",
+      "equipment": {
+        "mode": "maximise",
+        "stats": "Watchful"
+      }
+    },
+    {
+      "target": "A Professional Reward",
+      "branch": "The artist's reward",
+      "equipment": {
+        "mode": "outfit",
+        "outfit": "Morning"
+      }
+    }
+  ],
+  "maxIterations": 1
+}

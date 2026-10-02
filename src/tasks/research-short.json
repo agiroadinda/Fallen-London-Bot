@@ -1,0 +1,35 @@
+{
+  "name": "research short",
+  "location": "The University",
+  "repeatUntilOutOfActions": true,
+  "retryDelaySeconds": 10,
+  "minActionsToResume": 1,
+  "storylets": [
+    {
+      "target": "Train your Shifty Student",
+      "branch": "Graduate the Shifty Student"
+    },
+    {
+      "target": "Manage the Students in your Laboratory",
+      "branch": "Tolerate a Shifty Student"
+    },
+    {
+      "target": "Assess your Progress regarding",
+      "branch": "Disambiguate the Eolith"
+    },
+    {
+      "target": "Tidying up your University Lab",
+      "branch": "Put everything back where you found it"
+    },
+    {
+      "target": "Begin a Scientific Investigation",
+      "branch": "Eolith"
+    },
+    {
+      "type": "draw_cards",
+      "mode": "finite",
+      "count": 2,
+      "autoPlayPriority": 2
+    }
+  ]
+}
